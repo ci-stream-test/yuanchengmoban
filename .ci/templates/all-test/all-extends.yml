@@ -1,0 +1,73 @@
+parameters:
+  - name: content
+    type: string
+
+variables:
+  EVENT: xxx
+ 
+stages:
+- name: 预设替换变量
+  jobs:
+    all-job-0:
+      steps:
+      - run: |
+          echo "::set-variable name=EVENT::${{ci.event}}" 
+- name: Linux-公共
+  label: Deploy
+  id: stage-linux
+  jobs:
+    template:
+      - name: all-test/all-job-1.yml
+    all-job-2:
+      name: all-job-2
+      depend-on: [all-job-1]
+      steps:
+      - run: |
+          echo " all-job-2 [continue-on-error, dependon] 执行完成"
+          exit 1
+      continue-on-error: true
+
+
+finally:
+  all-job-f-1:
+    name: all-job-f-1
+    if: SUCCESS
+    steps:
+    - run: |
+        echo "all-job-f-1 [finally, if] 执行完成"
+
+notices:
+- type: email
+  title: ${{ci.event}}触发 STREAM-PROD环境-全部语法测试(模板) 测试成功
+  content: ${{ci.event}}触发 STREAM-PROD环境-全部语法测试(模板) 测试成功
+  receivers:
+    - ${{ ci.actor }}
+  if: SUCCESS
+- type: wework-message
+  content: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试成功
+  receivers:
+    - ${{ ci.actor }} 
+  if: SUCCESS       
+- type: wework-chat
+  chat-id: 
+    - ${{ variables.CHAT_ID }} 
+    # - ww230072302
+  content: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试成功 
+  if: SUCCESS
+- type: email
+  title: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试失败
+  content: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试失败
+  receivers:
+    - ${{ ci.actor }}
+  if: FAILURE
+- type: wework-message
+  content: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试失败
+  receivers:
+    - ${{ ci.actor }} 
+  if: FAILURE       
+- type: wework-chat
+  chat-id: 
+    - ${{ variables.CHAT_ID }} 
+    # - ww230072302
+  content: ${{ variables.EVENT }}触发 STREAM-PROD环境-全部语法测试(模板) 测试失败
+  if: FAILURE  
